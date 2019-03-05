@@ -1,8 +1,8 @@
 <template>
       <div class= 'chooseblock'>
-        <div class='oneblock' v-for="(item,index) in blocks" :key='index'>
-            <img class="oneblockpic" :src="item.src">
-            <p class='blocktext'>{{item.txt}}</p>
+        <div class='oneblock' v-for="(item,index) in block" :key='index' @click='jump(item)'>
+            <img class="oneblockpic" :src="item.imageUrl">
+            <p class='blocktext'>{{item.name}}</p>
         </div>
     </div>
 </template>
@@ -10,46 +10,27 @@
 export default {
   data () {
     return {
-      blocks: [
-        {
-          src: '/static/images/user.png',
-          txt: '美肴'
-        },
-        {
-          src: '/static/images/user.png',
-          txt: '美味佳肴'
-        },
-        {
-          src: '/static/images/user.png',
-          txt: '美肴'
-        },
-        {
-          src: '/static/images/user.png',
-          txt: '美味佳肴'
-        },
-        {
-          src: '/static/images/user.png',
-          txt: '美佳肴'
-        },
-        {
-          src: '/static/images/user.png',
-          txt: '美味佳肴'
-        },
-        {
-          src: '/static/images/user.png',
-          txt: '美味'
-        },
-        {
-          src: '/static/images/user.png',
-          txt: '美味'
-        }
-      ]
+    }
+  },
+  props: ['block'],
+  methods: {
+    jump (data) {
+      if (data.isStore) {
+        wx.navigateTo({
+          url: '/pages/storeGetLists/main?id=' + data.id + '&name=' + data.name
+        })
+      } else {
+        wx.navigateTo({
+          url: '/pages/productLists/main?id=' + data.id + '&name=' + data.name
+        })
+      }
     }
   }
 }
 </script>
 <style>
 .chooseblock{
+  min-height: 488rpx;
   width: 750rpx;
   display: flex;
    flex-direction: row;

@@ -1,62 +1,42 @@
 <template>
-  <div >
+  <div class='nav'>
     <!--  头部组件 --->
-    <headnav></headnav>
-    <div class="swipernav">
-      <!--  轮播图组件 --->
-      <swipe></swipe>
+    <headnav @getData='getData'></headnav>
+    <div class="swipernav" > <!--  轮播图组件type = 0 --->
+        <swipe :banner='banner'></swipe>
     </div>
-     <!--  方块 --->
-     <chooseblock></chooseblock>
-    <div class="userinfo" @click="bindViewTap">
-      <img class="userinfo-avatar" v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" background-size="cover" />
-      <img class="userinfo-avatar" src="/static/images/user.png" background-size="cover" />
-      <img class="userinfo-avatar" v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" background-size="cover" />
-      <img class="userinfo-avatar" src="/static/images/user.png" background-size="cover" />
-      <img class="userinfo-avatar" v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" background-size="cover" />
-      <img class="userinfo-avatar" src="/static/images/user.png" background-size="cover" />
-      <div class="userinfo-nickname">
-        <card :text="userInfo.nickName"></card>
-      </div>
-    </div>
-
-    <div class="usermotto">
-      <div class="user-motto">
-        <card :text="motto"></card>
-      </div>
-    </div>
-
-    <form class="form-container">
-      <input type="text" class="form-control" :value="motto" placeholder="v-model" />
-      <input type="text" class="form-control" v-model="motto" placeholder="v-model" />
-      <input type="text" class="form-control" v-model.lazy="motto" placeholder="v-model.lazy" />
-    </form>
-
-    <a href="/pages/counter/main" class="counter">去往Vuex示例页面</a>
-
-    <div class="all">
-        <div class="left">
-        </div>
-        <div class="right">
-        </div>
-    </div>
+    <chooseblock :block='block'></chooseblock> <!--  方块 --->
+     <div v-for="(item3,index3) in modules" :key="index3">  <!-- 组件根据type循环 --->
+     <recommends v-if="item3.type=== 5" :recommends='item3'></recommends>
+     <discount v-if="item3.type=== 2" :discount='item3'></discount>
+     <eatdiscount v-if="item3.type=== 7" :eatdiscount='item3'></eatdiscount>
+     <winter v-if="item3.type=== 3" :winter='item3'></winter>
+     <about v-if="item3.type=== 6" :about='item3'></about>
+     </div>
   </div>
 </template>
 
 <script>
+import {mapMutations} from 'vuex'
 import card from '@/components/card'
 import headnav from '@/components/nav_bar/navhead'
 import swipe from '@/components/swiper/swiper'
 import chooseblock from '@/components/block/chooseblock'
-
+import recommends from '@/components/recommends/recommends'
+import discount from '@/components/discount/discount'
+import eatdiscount from '@/components/eatdiscount/eatdiscount'
+import winter from '@/components/winter/winter'
+import about from '@/components/about/about'
 export default {
   data () {
     return {
-      motto: 'mpvue小程序测试',
-      userInfo: {
-        nickName: 'mpvue23456789',
-        avatarUrl: 'http://mpvue.com/assets/logo.png'
-      }
+      address: {
+        longitude: '',
+        latitude: ''
+      },
+      modules: [],
+      block: [],
+      banner: []
     }
   },
 
@@ -64,84 +44,63 @@ export default {
     card,
     headnav,
     swipe,
-    chooseblock
+    chooseblock,
+    recommends,
+    discount,
+    eatdiscount,
+    winter,
+    about
   },
-
-  methods: {
-    bindViewTap () {
-      const url = '../logs/main'
-      if (mpvuePlatform === 'wx') {
-        mpvue.switchTab({ url })
-      } else {
-        mpvue.navigateTo({ url })
-      }
-    },
-    clickHandle (ev) {
-      console.log('clickHandle:', ev)
-      // throw {message: 'custom test'}
-    }
-  },
-
   created () {
-    // let app = getApp()
+  },
+  methods: {
+    ...mapMutations({
+      address2: 'SETADDRESS'
+    }
+    ),
+    getData (longitude, latitude) {
+      var that = this
+      let localtions = {
+        longitude,
+        latitude
+      }
+      that.address2(localtions)
+      this.$.post('/storeGetHome', {
+        maxType: 7,
+        longitude,
+        language: 'cn',
+        latitude
+      }).then(res => {
+        that.modules = that.handleData(res.data.result.modules)
+      })
+    },
+    handleData (data) {
+      let that = this
+      data.forEach((item, index, arr) => {
+        if (item.type === 0) {
+          that.banner = item.contents
+        }
+        if (item.type === 1) {
+          that.block = item.contents
+        }
+        if (item.type === 2) {
+          item.contents.forEach((item2, index2, arr2) => {
+            item2.discounts.forEach((item3, index3, arr3) => {
+              item3.rgba = 'color:rgba(' + item3.color[0] + ',' + item3.color[1] + ',' + item3.color[2] + ',1)'
+            })
+          })
+        }
+      })
+      return data
+    }
   }
 }
 </script>
 
 <style scoped>
-.userinfo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.userinfo-avatar {
-  width: 128rpx;
-  height: 128rpx;
-  margin: 20rpx;
-  border-radius: 50%;
-}
-
-.userinfo-nickname {
-  color: #aaa;
-}
-
-.usermotto {
-  margin-top: 150px;
-}
-
-.form-control {
-  display: block;
-  padding: 0 12px;
-  margin-bottom: 5px;
-  border: 1px solid #ccc;
-}
-.all{
-  width:7.5rem;
-  height:1rem;
-  background-color:blue;
-}
-.all:after{
-  display:block;
-  content:'';
-  clear:both;
-}
-.left{
-  float:left;
-  width:3rem;
-  height:1rem;
-  background-color:red;
-}
-
-.right{
-  float:left;
-  width:4.5rem;
-  height:1rem;
-  background-color:green;
-}
 .swipernav{
   width:750rpx;
-  height:300 rpx;
+  min-height:158 rpx;
 
 }
 
